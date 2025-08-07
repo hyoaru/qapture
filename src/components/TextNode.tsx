@@ -1,34 +1,58 @@
+import TextNodeHandles from "@/components/TextNodeHandles";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Handle, Position, type NodeProps } from "@xyflow/react";
-import {
-  useCallback,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type KeyboardEventHandler,
-} from "react";
+import { useReactFlow, type NodeProps } from "@xyflow/react";
+import { nanoid } from "nanoid";
+import { useCallback, useRef, type KeyboardEventHandler } from "react";
 
-type TextNodeProps = {
-  data: NodeProps & {
-    onTabDown: () => void;
-    onShiftTabDown: () => void;
+type TextNodeProps = NodeProps & {
+  data: {
     onEnterDown: () => void;
     onShiftEnterDown: () => void;
   };
 };
 
 export default function TextNode(props: TextNodeProps) {
-  const [isSelected, setIsSelected] = useState(false);
+  const reactFlow = useReactFlow();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const onChange = useCallback((evt: ChangeEvent<HTMLInputElement>) => {
-    console.log(evt.target.value);
-  }, []);
+  const onSelect = useCallback(() => {
+    reactFlow.setNodes((prevNodes) =>
+      prevNodes.map((prevNode) => ({
+        ...prevNode,
+        selected: prevNode.id == props.id,
+      })),
+    );
+  }, [reactFlow, props.id]);
 
   const onContainerClick = useCallback(() => {
-    setIsSelected(true);
-  }, []);
+    onSelect();
+  }, [onSelect]);
+
+  const onTabDown = useCallback(() => {
+    const newNode = {
+      id: nanoid(),
+      type: "textNode",
+      position: {
+        x: props.positionAbsoluteX + 200,
+        y: props.positionAbsoluteY,
+      },
+      data: {},
+    };
+
+    const newEdge = {
+      id: `${props.id}-${newNode.id}`,
+      source: props.id,
+      target: newNode.id,
+      sourceHandle: `${props.id}-handle-source-right`,
+      targetHandle: `${newNode.id}-handle-target-left`,
+    };
+
+    reactFlow.setEdges((prevEdges) => [...prevEdges, newEdge]);
+    reactFlow.setNodes((prevNodes) => {
+      return [...prevNodes, newNode];
+    });
+  }, [props, reactFlow]);
 
   const onSpaceDown = useCallback(() => {
     if (inputRef.current) {
@@ -40,13 +64,12 @@ export default function TextNode(props: TextNodeProps) {
   const onEscapeDown = useCallback(() => {
     if (inputRef.current) {
       inputRef.current.readOnly = true;
-      setIsSelected(false);
     }
   }, []);
 
   const onKeyDown: KeyboardEventHandler<HTMLDivElement> = useCallback(
     (event) => {
-      if (!isSelected) return;
+      if (!props.selected) return;
 
       switch (event.code) {
         case "Space":
@@ -60,14 +83,14 @@ export default function TextNode(props: TextNodeProps) {
         case "Tab":
           event.preventDefault();
           if (event.shiftKey) {
-            props.data.onShiftTabDown();
+            console.log("shift tab");
           } else {
-            props.data.onTabDown();
+            onTabDown();
           }
           break;
       }
     },
-    [isSelected, onSpaceDown, onEscapeDown, props.data],
+    [props.selected, onSpaceDown, onEscapeDown, onTabDown],
   );
 
   return (
@@ -81,46 +104,11 @@ export default function TextNode(props: TextNodeProps) {
         className={cn(
           "field-sizing-content min-w-20 text-center focus-visible:ring-0 focus-visible:outline-none",
         )}
-        onChange={onChange}
         tabIndex={-1}
         readOnly
       />
 
-      <TextNodeHandles />
+      <TextNodeHandles nodeId={props.id} />
     </div>
-  );
-}
-
-function TextNodeHandles() {
-  return (
-    <>
-      <Handle type="source" position={Position.Top} id="handle-top-source" />
-      <Handle type="target" position={Position.Top} id="handle-top-target" />
-
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        id="handle-bottom-source"
-      />
-      <Handle
-        type="target"
-        position={Position.Bottom}
-        id="handle-bottom-target"
-      />
-
-      <Handle type="source" position={Position.Left} id="handle-left-source" />
-      <Handle type="target" position={Position.Left} id="handle-left-target" />
-
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="handle-right-source"
-      />
-      <Handle
-        type="target"
-        position={Position.Right}
-        id="handle-right-target"
-      />
-    </>
   );
 }

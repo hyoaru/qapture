@@ -15,12 +15,10 @@ import {
   type OnNodesChange,
   type OnEdgesChange,
   type OnConnect,
-  type OnSelectionChangeFunc,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { nanoid } from "nanoid";
 import TextNode from "@/components/TextNode";
-import { layoutGraph } from "@/lib/layout";
 
 export const Route = createFileRoute("/")({
   component: RouteComponent,
@@ -57,46 +55,36 @@ function RouteComponent() {
     setEdges((edgesSnapshot) => addEdge(params, edgesSnapshot));
   }, []);
 
-  const onSelectionChange: OnSelectionChangeFunc = useCallback((changes) => {
-    console.log(changes);
-  }, []);
-
-  const onTabDown = useCallback(
-    (sourceNodeId: string) => {
-      setNodes((prevNodes) => {
-        const sourceNode = prevNodes.find((n) => n.id === sourceNodeId);
-        if (!sourceNode) return prevNodes;
-
-        const newNodeId = nanoid();
-        const newNode = {
-          id: newNodeId,
-          type: "textNode",
-          position: { x: 0, y: 0 }, // dummy, will be updated
-          data: { label: "" },
-        };
-
-        const newNodes = [...prevNodes, newNode];
-        const newEdges = [
-          ...edges,
-          {
-            id: `${sourceNodeId}-${newNodeId}`,
-            source: sourceNodeId,
-            sourceHandle: "handle-right-source",
-            target: newNodeId,
-            targetHandle: "handle-left-target",
-          },
-        ];
-
-        layoutGraph(newNodes, newEdges).then(({ nodes: layoutedNodes }) => {
-          setNodes(layoutedNodes);
-        });
-
-        setEdges(newEdges);
-        return newNodes;
-      });
-    },
-    [edges],
-  );
+  // const onTabDown = useCallback((sourceNodeId: string) => {
+  //   setNodes((prevNodes) => {
+  //     const sourceNode = prevNodes.find((n) => n.id === sourceNodeId);
+  //     if (!sourceNode) return prevNodes;
+  //
+  //     const newNodeId = nanoid();
+  //     const newNode = {
+  //       id: newNodeId,
+  //       type: "textNode",
+  //       position: {
+  //         x: sourceNode.position.x + 200,
+  //         y: sourceNode.position.y,
+  //       },
+  //       data: { label: "" },
+  //     };
+  //
+  //     setEdges((prevEdges) => [
+  //       ...prevEdges,
+  //       {
+  //         id: `${sourceNodeId}-${newNodeId}`,
+  //         source: sourceNodeId,
+  //         sourceHandle: "handle-right",
+  //         target: newNodeId,
+  //         targetHandle: "handle-right",
+  //       },
+  //     ]);
+  //
+  //     return [...prevNodes, newNode];
+  //   });
+  // }, []);
 
   return (
     <>
@@ -106,13 +94,11 @@ function RouteComponent() {
             ...node,
             data: {
               ...node.data,
-              onTabDown: () => onTabDown(node.id),
             },
           }))}
           edges={edges}
           nodeTypes={nodeTypes}
           onNodesChange={onNodesChange}
-          onSelectionChange={onSelectionChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           fitView
