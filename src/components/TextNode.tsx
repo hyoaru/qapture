@@ -29,6 +29,81 @@ export default function TextNode(props: TextNodeProps) {
     onSelect();
   }, [onSelect]);
 
+  const onShiftEnterDown = useCallback(() => {
+    const newNode = {
+      id: nanoid(),
+      type: "textNode",
+      position: {
+        x: props.positionAbsoluteX,
+        y: props.positionAbsoluteY - 200,
+      },
+      data: {},
+    };
+
+    const newEdge = {
+      id: `${props.id}-${newNode.id}`,
+      source: props.id,
+      target: newNode.id,
+      sourceHandle: `${props.id}-handle-source-top`,
+      targetHandle: `${newNode.id}-handle-target-bottom`,
+    };
+
+    reactFlow.setEdges((prevEdges) => [...prevEdges, newEdge]);
+    reactFlow.setNodes((prevNodes) => {
+      return [...prevNodes, newNode];
+    });
+  }, [props, reactFlow]);
+
+  const onEnterDown = useCallback(() => {
+    const newNode = {
+      id: nanoid(),
+      type: "textNode",
+      position: {
+        x: props.positionAbsoluteX,
+        y: props.positionAbsoluteY + 200,
+      },
+      data: {},
+    };
+
+    const newEdge = {
+      id: `${props.id}-${newNode.id}`,
+      source: props.id,
+      target: newNode.id,
+      sourceHandle: `${props.id}-handle-source-bottom`,
+      targetHandle: `${newNode.id}-handle-target-top`,
+    };
+
+    reactFlow.setEdges((prevEdges) => [...prevEdges, newEdge]);
+    reactFlow.setNodes((prevNodes) => {
+      return [...prevNodes, newNode];
+    });
+  }, [props, reactFlow]);
+
+  const onShiftTabDown = useCallback(() => {
+    const newNode = {
+      id: nanoid(),
+      type: "textNode",
+      position: {
+        x: props.positionAbsoluteX - 200,
+        y: props.positionAbsoluteY,
+      },
+      data: {},
+    };
+
+    const newEdge = {
+      id: `${props.id}-${newNode.id}`,
+      source: props.id,
+      target: newNode.id,
+      sourceHandle: `${props.id}-handle-source-left`,
+      targetHandle: `${newNode.id}-handle-target-right`,
+    };
+
+    reactFlow.setEdges((prevEdges) => [...prevEdges, newEdge]);
+    reactFlow.setNodes((prevNodes) => {
+      return [...prevNodes, newNode];
+    });
+  }, [props, reactFlow]);
+
   const onTabDown = useCallback(() => {
     const newNode = {
       id: nanoid(),
@@ -72,25 +147,41 @@ export default function TextNode(props: TextNodeProps) {
       if (!props.selected) return;
 
       switch (event.code) {
-        case "Space":
-          event.preventDefault();
-          onSpaceDown();
-          break;
         case "Escape":
           event.preventDefault();
           onEscapeDown();
           break;
+        case "Space":
+          event.preventDefault();
+          onSpaceDown();
+          break;
+        case "Enter":
+          event.preventDefault();
+          if (event.shiftKey) {
+            onShiftEnterDown();
+          } else {
+            onEnterDown();
+          }
+          break;
         case "Tab":
           event.preventDefault();
           if (event.shiftKey) {
-            console.log("shift tab");
+            onShiftTabDown();
           } else {
             onTabDown();
           }
           break;
       }
     },
-    [props.selected, onSpaceDown, onEscapeDown, onTabDown],
+    [
+      props.selected,
+      onSpaceDown,
+      onEscapeDown,
+      onTabDown,
+      onEnterDown,
+      onShiftTabDown,
+      onShiftEnterDown,
+    ],
   );
 
   return (

@@ -1,24 +1,23 @@
+import TextNode from "@/components/TextNode";
 import { createFileRoute } from "@tanstack/react-router";
-
-import { useState, useCallback, type KeyboardEventHandler } from "react";
 import {
-  ReactFlow,
-  applyNodeChanges,
-  applyEdgeChanges,
   addEdge,
+  applyEdgeChanges,
+  applyNodeChanges,
   Background,
+  BackgroundVariant,
   Controls,
   MiniMap,
-  BackgroundVariant,
-  type Node,
+  ReactFlow,
   type Edge,
-  type OnNodesChange,
-  type OnEdgesChange,
+  type Node,
   type OnConnect,
+  type OnEdgesChange,
+  type OnNodesChange,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { nanoid } from "nanoid";
-import TextNode from "@/components/TextNode";
+import { useCallback, useState } from "react";
 
 export const Route = createFileRoute("/")({
   component: RouteComponent,
@@ -54,37 +53,6 @@ function RouteComponent() {
   const onConnect: OnConnect = useCallback((params) => {
     setEdges((edgesSnapshot) => addEdge(params, edgesSnapshot));
   }, []);
-
-  // const onTabDown = useCallback((sourceNodeId: string) => {
-  //   setNodes((prevNodes) => {
-  //     const sourceNode = prevNodes.find((n) => n.id === sourceNodeId);
-  //     if (!sourceNode) return prevNodes;
-  //
-  //     const newNodeId = nanoid();
-  //     const newNode = {
-  //       id: newNodeId,
-  //       type: "textNode",
-  //       position: {
-  //         x: sourceNode.position.x + 200,
-  //         y: sourceNode.position.y,
-  //       },
-  //       data: { label: "" },
-  //     };
-  //
-  //     setEdges((prevEdges) => [
-  //       ...prevEdges,
-  //       {
-  //         id: `${sourceNodeId}-${newNodeId}`,
-  //         source: sourceNodeId,
-  //         sourceHandle: "handle-right",
-  //         target: newNodeId,
-  //         targetHandle: "handle-right",
-  //       },
-  //     ]);
-  //
-  //     return [...prevNodes, newNode];
-  //   });
-  // }, []);
 
   return (
     <>
