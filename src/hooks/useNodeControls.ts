@@ -14,43 +14,6 @@ type UseNodeControlsParams = {
 
 type Direction = "top" | "bottom" | "left" | "right";
 
-type DirectionalNodeCreationConfig = {
-  sourceEdgeSide: string;
-  targetEdgeSide: string;
-  xOffset: number;
-  yOffset: number;
-};
-
-const nodeCreationDirectionConfig: Record<
-  Direction,
-  DirectionalNodeCreationConfig
-> = {
-  top: {
-    sourceEdgeSide: "top",
-    targetEdgeSide: "bottom",
-    xOffset: 0,
-    yOffset: -200,
-  },
-  bottom: {
-    sourceEdgeSide: "bottom",
-    targetEdgeSide: "top",
-    xOffset: 0,
-    yOffset: 200,
-  },
-  left: {
-    sourceEdgeSide: "left",
-    targetEdgeSide: "right",
-    xOffset: -200,
-    yOffset: 0,
-  },
-  right: {
-    sourceEdgeSide: "right",
-    targetEdgeSide: "left",
-    xOffset: 200,
-    yOffset: 0,
-  },
-};
-
 export const useNodeControls = (params: UseNodeControlsParams) => {
   const reactFlow = useReactFlow();
   const directionalIndexRef = useRef<{ [key in Direction]?: number }>({});
@@ -78,21 +41,61 @@ export const useNodeControls = (params: UseNodeControlsParams) => {
     [centerViewToNode, reactFlow],
   );
 
-  const createNodeInDirection = useCallback(
-    async (direction: Direction) => {
-      if (!params.node) return;
+  const createNodeAbove = useCallback(async () => {
+    if (!params.node) return;
 
-      const config = nodeCreationDirectionConfig[direction];
+    const link = NodeHelpers.createLinkedNode({
+      sourceNode: params.node,
+      sourceEdgeSide: "top",
+      targetEdgeSide: "bottom",
+      xOffset: (params.node.measured!.width! - 80) / 2,
+      yOffset: -200,
+    });
 
-      const link = NodeHelpers.createLinkedNode({
-        sourceNode: params.node,
-        ...config,
-      });
+    await insertNodeWithEdges({ newNode: link.node, newEdges: link.edges });
+  }, [params.node, insertNodeWithEdges]);
 
-      await insertNodeWithEdges({ newNode: link.node, newEdges: link.edges });
-    },
-    [params.node, insertNodeWithEdges],
-  );
+  const createNodeBelow = useCallback(async () => {
+    if (!params.node) return;
+
+    const link = NodeHelpers.createLinkedNode({
+      sourceNode: params.node,
+      sourceEdgeSide: "bottom",
+      targetEdgeSide: "top",
+      xOffset: (params.node.measured!.width! - 80) / 2,
+      yOffset: 200,
+    });
+
+    await insertNodeWithEdges({ newNode: link.node, newEdges: link.edges });
+  }, [params.node, insertNodeWithEdges]);
+
+  const createNodeRight = useCallback(async () => {
+    if (!params.node) return;
+
+    const link = NodeHelpers.createLinkedNode({
+      sourceNode: params.node,
+      sourceEdgeSide: "right",
+      targetEdgeSide: "left",
+      xOffset: params.node.measured!.width! + 200,
+      yOffset: 0,
+    });
+
+    await insertNodeWithEdges({ newNode: link.node, newEdges: link.edges });
+  }, [params.node, insertNodeWithEdges]);
+
+  const createNodeLeft = useCallback(async () => {
+    if (!params.node) return;
+
+    const link = NodeHelpers.createLinkedNode({
+      sourceNode: params.node,
+      sourceEdgeSide: "left",
+      targetEdgeSide: "right",
+      xOffset: -(params.node.measured!.width! + 200),
+      yOffset: 0,
+    });
+
+    await insertNodeWithEdges({ newNode: link.node, newEdges: link.edges });
+  }, [params.node, insertNodeWithEdges]);
 
   const cycleThroughNodesInDirection = useCallback(
     async (direction: Direction) => {
@@ -165,10 +168,10 @@ export const useNodeControls = (params: UseNodeControlsParams) => {
       disableEditing: disableInputEditing,
     },
     addNode: {
-      above: () => createNodeInDirection("top"),
-      below: () => createNodeInDirection("bottom"),
-      left: () => createNodeInDirection("left"),
-      right: () => createNodeInDirection("right"),
+      above: createNodeAbove,
+      below: createNodeBelow,
+      left: createNodeLeft,
+      right: createNodeRight,
     },
     navigate: {
       toAboveNode: () => cycleThroughNodesInDirection("top"),
