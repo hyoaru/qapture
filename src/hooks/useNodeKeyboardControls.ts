@@ -3,13 +3,14 @@ import { nanoid } from "nanoid";
 import { useCallback } from "react";
 
 type UseNodeKeyboardControlsParams = {
-  node: Node;
+  node?: Node;
   inputRef: React.RefObject<HTMLInputElement | null>;
 };
 
-export const useNodeKeyboardControls = (
-  params: UseNodeKeyboardControlsParams,
-) => {
+export const useNodeKeyboardControls = ({
+  node,
+  inputRef,
+}: UseNodeKeyboardControlsParams) => {
   const defaultOffset = 200;
   const reactFlow = useReactFlow();
 
@@ -27,7 +28,7 @@ export const useNodeKeyboardControls = (
       xOffset?: number;
       yOffset?: number;
     }) => {
-      const newNode = {
+      const newNode: Node = {
         id: nanoid(),
         type: "text",
         position: {
@@ -38,7 +39,7 @@ export const useNodeKeyboardControls = (
         selected: true,
       };
 
-      const newEdge = {
+      const newEdge: Edge = {
         id: `${sourceNode.id}-${newNode.id}`,
         animated: true,
         source: sourceNode.id,
@@ -47,10 +48,7 @@ export const useNodeKeyboardControls = (
         targetHandle: `${newNode.id}-handle-target-${targetEdgeSide}`,
       };
 
-      return {
-        node: newNode,
-        edge: newEdge,
-      };
+      return { node: newNode, edge: newEdge };
     },
     [],
   );
@@ -87,61 +85,69 @@ export const useNodeKeyboardControls = (
   );
 
   const onSpaceDown = useCallback(() => {
-    if (params.inputRef.current) {
-      params.inputRef.current.readOnly = false;
-      params.inputRef.current.focus();
+    if (inputRef.current) {
+      inputRef.current.readOnly = false;
     }
-  }, [params.inputRef]);
+  }, [inputRef]);
 
   const onEscapeDown = useCallback(() => {
-    if (params.inputRef.current) {
-      params.inputRef.current.readOnly = true;
+    if (inputRef.current) {
+      inputRef.current.readOnly = true;
+      inputRef.current.blur();
     }
-  }, [params.inputRef]);
+  }, [inputRef]);
 
   const onShiftEnterDown = useCallback(async () => {
+    if (!node) return;
+
     const link = createLinkedNode({
-      sourceNode: params.node,
+      sourceNode: node,
       sourceEdgeSide: "top",
       targetEdgeSide: "bottom",
       yOffset: -defaultOffset,
     });
 
     await applyChanges({ newNode: link.node, newEdge: link.edge });
-  }, [applyChanges, createLinkedNode, params.node]);
+  }, [node, createLinkedNode, applyChanges]);
 
   const onEnterDown = useCallback(async () => {
+    if (!node) return;
+
     const link = createLinkedNode({
-      sourceNode: params.node,
+      sourceNode: node,
       sourceEdgeSide: "bottom",
       targetEdgeSide: "top",
       yOffset: defaultOffset,
     });
 
     await applyChanges({ newNode: link.node, newEdge: link.edge });
-  }, [applyChanges, createLinkedNode, params.node]);
+  }, [node, createLinkedNode, applyChanges]);
 
   const onShiftTabDown = useCallback(async () => {
+    if (!node) return;
+
     const link = createLinkedNode({
-      sourceNode: params.node,
+      sourceNode: node,
       sourceEdgeSide: "left",
       targetEdgeSide: "right",
       xOffset: -defaultOffset,
     });
 
     await applyChanges({ newNode: link.node, newEdge: link.edge });
-  }, [applyChanges, createLinkedNode, params.node]);
+  }, [node, createLinkedNode, applyChanges]);
 
   const onTabDown = useCallback(async () => {
+    if (!node) return;
+
     const link = createLinkedNode({
-      sourceNode: params.node,
+      sourceNode: node,
       sourceEdgeSide: "right",
       targetEdgeSide: "left",
       xOffset: defaultOffset,
     });
 
     await applyChanges({ newNode: link.node, newEdge: link.edge });
-  }, [applyChanges, createLinkedNode, params.node]);
+  }, [node, createLinkedNode, applyChanges]);
 
   return {
     onShiftEnterDown,

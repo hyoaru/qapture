@@ -19,7 +19,13 @@ import { useCallback } from "react";
 export const Route = createFileRoute("/")({ component: RouteComponent });
 
 const initialNodes: Node[] = [
-  { id: nanoid(), type: "text", position: { x: 0, y: 0 }, data: {} },
+  {
+    id: nanoid(),
+    type: "text",
+    position: { x: 0, y: 0 },
+    data: {},
+    selected: true,
+  },
 ];
 
 function RouteComponent() {

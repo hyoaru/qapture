@@ -3,12 +3,23 @@ import { Input } from "@/components/ui/input";
 import { useNodeKeyboardControls } from "@/hooks/useNodeKeyboardControls";
 import { cn } from "@/lib/utils";
 import { useReactFlow, type Node, type NodeProps } from "@xyflow/react";
-import { useCallback, useRef, type KeyboardEventHandler } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  type KeyboardEventHandler,
+} from "react";
 
 export default function TextNode(props: NodeProps<Node>) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const node = useReactFlow().getNode(props.id)!;
+  const node = useReactFlow().getNode(props.id);
   const nodeKeyboardControls = useNodeKeyboardControls({ node, inputRef });
+
+  useEffect(() => {
+    if (props.selected && inputRef.current) {
+      inputRef.current?.focus();
+    }
+  }, [props.selected, node]);
 
   const onKeyDown: KeyboardEventHandler<HTMLDivElement> = useCallback(
     async (event) => {
@@ -45,14 +56,12 @@ export default function TextNode(props: NodeProps<Node>) {
   );
 
   return (
-    <div onKeyDown={onKeyDown} className="bg-background text-foreground">
+    <div onKeyDown={onKeyDown} className="bg-background text-foregrounda">
       <Input
+        id={"test-input"}
         ref={inputRef}
-        tabIndex={-1}
         readOnly
-        className={cn(
-          "field-sizing-content min-w-20 text-center focus-visible:ring-0 focus-visible:outline-none",
-        )}
+        className={cn("field-sizing-content min-w-20 text-center ")}
       />
 
       <TextNodeHandles nodeId={props.id} />
