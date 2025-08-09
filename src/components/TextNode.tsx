@@ -1,6 +1,6 @@
 import TextNodeHandles from "@/components/TextNodeHandles";
 import { Input } from "@/components/ui/input";
-import { useNodeKeyboardControls } from "@/hooks/useNodeKeyboardControls";
+import { useNodeControls } from "@/hooks/useNodeControls";
 import { cn } from "@/lib/utils";
 import { useReactFlow, type Node, type NodeProps } from "@xyflow/react";
 import {
@@ -13,7 +13,7 @@ import {
 export default function TextNode(props: NodeProps<Node>) {
   const inputRef = useRef<HTMLInputElement>(null);
   const node = useReactFlow().getNode(props.id);
-  const nodeKeyboardControls = useNodeKeyboardControls({ node, inputRef });
+  const nodeKeyboardControls = useNodeControls({ node, inputRef });
 
   useEffect(() => {
     if (props.selected && inputRef.current) {
@@ -28,26 +28,26 @@ export default function TextNode(props: NodeProps<Node>) {
       switch (event.code) {
         case "Escape":
           event.preventDefault();
-          nodeKeyboardControls.onEscapeDown();
+          nodeKeyboardControls.disableInputEditing();
           break;
         case "Space":
           event.preventDefault();
-          nodeKeyboardControls.onSpaceDown();
+          nodeKeyboardControls.enableInputEditing();
           break;
         case "Enter":
           event.preventDefault();
           if (event.shiftKey) {
-            await nodeKeyboardControls.onShiftEnterDown();
+            await nodeKeyboardControls.addNodeAbove();
           } else {
-            await nodeKeyboardControls.onEnterDown();
+            await nodeKeyboardControls.addNodeBelow();
           }
           break;
         case "Tab":
           event.preventDefault();
           if (event.shiftKey) {
-            await nodeKeyboardControls.onShiftTabDown();
+            await nodeKeyboardControls.addNodeLeft();
           } else {
-            await nodeKeyboardControls.onTabDown();
+            await nodeKeyboardControls.addNodeRight();
           }
           break;
       }

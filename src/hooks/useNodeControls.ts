@@ -2,15 +2,12 @@ import { useReactFlow, type Edge, type Node } from "@xyflow/react";
 import { nanoid } from "nanoid";
 import { useCallback } from "react";
 
-type UseNodeKeyboardControlsParams = {
+type UseNodeControlsParams = {
   node?: Node;
   inputRef: React.RefObject<HTMLInputElement | null>;
 };
 
-export const useNodeKeyboardControls = ({
-  node,
-  inputRef,
-}: UseNodeKeyboardControlsParams) => {
+export const useNodeControls = ({ node, inputRef }: UseNodeControlsParams) => {
   const defaultOffset = 200;
   const reactFlow = useReactFlow();
 
@@ -84,20 +81,20 @@ export const useNodeKeyboardControls = ({
     [addNode, addEdge, reactFlow],
   );
 
-  const onSpaceDown = useCallback(() => {
+  const enableInputEditing = useCallback(() => {
     if (inputRef.current) {
       inputRef.current.readOnly = false;
     }
   }, [inputRef]);
 
-  const onEscapeDown = useCallback(() => {
+  const disableInputEditing = useCallback(() => {
     if (inputRef.current) {
       inputRef.current.readOnly = true;
       inputRef.current.blur();
     }
   }, [inputRef]);
 
-  const onShiftEnterDown = useCallback(async () => {
+  const addNodeAbove = useCallback(async () => {
     if (!node) return;
 
     const link = createLinkedNode({
@@ -110,7 +107,7 @@ export const useNodeKeyboardControls = ({
     await applyChanges({ newNode: link.node, newEdge: link.edge });
   }, [node, createLinkedNode, applyChanges]);
 
-  const onEnterDown = useCallback(async () => {
+  const addNodeBelow = useCallback(async () => {
     if (!node) return;
 
     const link = createLinkedNode({
@@ -123,7 +120,7 @@ export const useNodeKeyboardControls = ({
     await applyChanges({ newNode: link.node, newEdge: link.edge });
   }, [node, createLinkedNode, applyChanges]);
 
-  const onShiftTabDown = useCallback(async () => {
+  const addNodeLeft = useCallback(async () => {
     if (!node) return;
 
     const link = createLinkedNode({
@@ -136,7 +133,7 @@ export const useNodeKeyboardControls = ({
     await applyChanges({ newNode: link.node, newEdge: link.edge });
   }, [node, createLinkedNode, applyChanges]);
 
-  const onTabDown = useCallback(async () => {
+  const addNodeRight = useCallback(async () => {
     if (!node) return;
 
     const link = createLinkedNode({
@@ -150,11 +147,11 @@ export const useNodeKeyboardControls = ({
   }, [node, createLinkedNode, applyChanges]);
 
   return {
-    onShiftEnterDown,
-    onEnterDown,
-    onShiftTabDown,
-    onTabDown,
-    onEscapeDown,
-    onSpaceDown,
+    addNodeAbove: addNodeAbove,
+    addNodeBelow: addNodeBelow,
+    addNodeLeft: addNodeLeft,
+    addNodeRight: addNodeRight,
+    disableInputEditing: disableInputEditing,
+    enableInputEditing: enableInputEditing,
   };
 };
