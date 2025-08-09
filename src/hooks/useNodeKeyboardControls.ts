@@ -12,6 +12,7 @@ export const useNodeKeyboardControls = ({
   setNodes,
 }: UseNodeKeyboardControlsParams) => {
   const defaultOffset = 200;
+
   const createLinkedNode = useCallback(
     ({
       sourceNode,
@@ -54,6 +55,22 @@ export const useNodeKeyboardControls = ({
     [],
   );
 
+  const addNode = useCallback(
+    (node: Node & { selected: boolean }) => {
+      setNodes((prevNodes) =>
+        prevNodes.map((n) => ({ ...n, selected: false })).concat(node),
+      );
+    },
+    [setNodes],
+  );
+
+  const addEdge = useCallback(
+    (edge: Edge) => {
+      setEdges((prevEdges) => [...prevEdges, edge]);
+    },
+    [setEdges],
+  );
+
   const onSpaceDown = useCallback(
     (inputRef: React.RefObject<HTMLInputElement | null>) => {
       if (inputRef.current) {
@@ -82,12 +99,10 @@ export const useNodeKeyboardControls = ({
         yOffset: -defaultOffset,
       });
 
-      setEdges((prevEdges) => [...prevEdges, link.edge]);
-      setNodes((prevNodes) =>
-        prevNodes.map((n) => ({ ...n, selected: false })).concat(link.node),
-      );
+      addEdge(link.edge);
+      addNode(link.node);
     },
-    [setEdges, setNodes, createLinkedNode],
+    [addEdge, addNode, createLinkedNode],
   );
 
   const onEnterDown = useCallback(
@@ -99,12 +114,10 @@ export const useNodeKeyboardControls = ({
         yOffset: defaultOffset,
       });
 
-      setEdges((prevEdges) => [...prevEdges, link.edge]);
-      setNodes((prevNodes) =>
-        prevNodes.map((n) => ({ ...n, selected: false })).concat(link.node),
-      );
+      addEdge(link.edge);
+      addNode(link.node);
     },
-    [setEdges, setNodes, createLinkedNode],
+    [addEdge, addNode, createLinkedNode],
   );
 
   const onShiftTabDown = useCallback(
@@ -116,12 +129,10 @@ export const useNodeKeyboardControls = ({
         xOffset: -defaultOffset,
       });
 
-      setEdges((prevEdges) => [...prevEdges, link.edge]);
-      setNodes((prevNodes) =>
-        prevNodes.map((n) => ({ ...n, selected: false })).concat(link.node),
-      );
+      addEdge(link.edge);
+      addNode(link.node);
     },
-    [setEdges, setNodes, createLinkedNode],
+    [addEdge, addNode, createLinkedNode],
   );
 
   const onTabDown = useCallback(
@@ -133,12 +144,10 @@ export const useNodeKeyboardControls = ({
         xOffset: defaultOffset,
       });
 
-      setEdges((prevEdges) => [...prevEdges, link.edge]);
-      setNodes((prevNodes) =>
-        prevNodes.map((n) => ({ ...n, selected: false })).concat(link.node),
-      );
+      addEdge(link.edge);
+      addNode(link.node);
     },
-    [setEdges, setNodes, createLinkedNode],
+    [addEdge, addNode, createLinkedNode],
   );
 
   return {
