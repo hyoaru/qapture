@@ -1,4 +1,5 @@
 import TextNode from "@/components/TextNode";
+import { useNodeKeyboardControls } from "@/hooks/useNodeKeyboardControls";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   addEdge,
@@ -19,28 +20,16 @@ import "@xyflow/react/dist/style.css";
 import { nanoid } from "nanoid";
 import { useCallback, useState } from "react";
 
-export const Route = createFileRoute("/")({
-  component: RouteComponent,
-});
+export const Route = createFileRoute("/")({ component: RouteComponent });
 
 const initialNodes: Node[] = [
-  {
-    id: nanoid(),
-    type: "textNode",
-    position: { x: 0, y: 0 },
-    data: { label: "Node 1" },
-  },
-  // { id: "n2", position: { x: 0, y: 100 }, data: { label: "Node 2" } },
+  { id: nanoid(), type: "text", position: { x: 0, y: 0 }, data: {} },
 ];
-// const initialEdges: Edge[] = [
-//   { id: "n1-n2", source: "n1", target: "n2", animated: true },
-// ];
-//
-const nodeTypes = { textNode: TextNode };
 
 function RouteComponent() {
   const [nodes, setNodes] = useState<Node[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>([]);
+  const nodeKeyboardControls = useNodeKeyboardControls({ setEdges, setNodes });
 
   const onNodesChange: OnNodesChange = useCallback((changes) => {
     setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot));
@@ -54,18 +43,25 @@ function RouteComponent() {
     setEdges((edgesSnapshot) => addEdge(params, edgesSnapshot));
   }, []);
 
+  const renderedNodes = nodes.map((node) => ({
+    ...node,
+    data: {
+      onEscapeDown: nodeKeyboardControls.onEscapeDown,
+      onSpaceDown: nodeKeyboardControls.onSpaceDown,
+      onShiftTabDown: () => nodeKeyboardControls.onShiftTabDown(node),
+      onTabDown: () => nodeKeyboardControls.onTabDown(node),
+      onShiftEnterDown: () => nodeKeyboardControls.onShiftEnterDown(node),
+      onEnterDown: () => nodeKeyboardControls.onEnterDown(node),
+    },
+  }));
+
   return (
     <>
       <div style={{ width: "100vw", height: "100vh" }}>
         <ReactFlow
-          nodes={nodes.map((node) => ({
-            ...node,
-            data: {
-              ...node.data,
-            },
-          }))}
+          nodes={renderedNodes}
           edges={edges}
-          nodeTypes={nodeTypes}
+          nodeTypes={{ text: TextNode }}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
