@@ -9,7 +9,12 @@ type CreateLinkedNodeParams = {
   yOffset?: number;
 };
 
-type GetClosestNodeEuclidean = {
+type GetClosestNodeEuclideanParams = {
+  node: Node;
+  nodes: Node[];
+};
+
+type SortClosestNodeEuclideanParams = {
   node: Node;
   nodes: Node[];
 };
@@ -55,7 +60,10 @@ export class NodeHelpers {
     return { node: newNode, edges: newEdges };
   }
 
-  static getClosestNodeEuclidean({ node, nodes }: GetClosestNodeEuclidean) {
+  static getClosestNodeEuclidean({
+    node,
+    nodes,
+  }: GetClosestNodeEuclideanParams): Node {
     return nodes.reduce((closestNode, currentNode) => {
       const dxCurrent = currentNode.position.x - node.position.x;
       const dyCurrent = currentNode.position.y - node.position.y;
@@ -67,5 +75,22 @@ export class NodeHelpers {
 
       return currentDistance < closestDistance ? currentNode : closestNode;
     }, nodes[0]);
+  }
+
+  static sortNodesByDistanceEuclidean({
+    node,
+    nodes,
+  }: SortClosestNodeEuclideanParams): Node[] {
+    return [...nodes].sort((a, b) => {
+      const dxA = a.position.x - node.position.x;
+      const dyA = a.position.y - node.position.y;
+      const distA = Math.sqrt(dxA ** 2 + dyA ** 2);
+
+      const dxB = b.position.x - node.position.x;
+      const dyB = b.position.y - node.position.y;
+      const distB = Math.sqrt(dxB ** 2 + dyB ** 2);
+
+      return distA - distB;
+    });
   }
 }

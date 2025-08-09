@@ -5,7 +5,7 @@ import {
   type Edge,
   type Node,
 } from "@xyflow/react";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 
 type UseNodeControlsParams = {
   node?: Node;
@@ -53,6 +53,7 @@ const nodeCreationDirectionConfig: Record<
 
 export const useNodeControls = (params: UseNodeControlsParams) => {
   const reactFlow = useReactFlow();
+  const directionalIndexRef = useRef<{ [key in Direction]?: number }>({});
 
   const centerViewToNode = useCallback(
     async (node: Node) => {
@@ -93,7 +94,7 @@ export const useNodeControls = (params: UseNodeControlsParams) => {
     [params.node, insertNodeWithEdges],
   );
 
-  const navigateToClosestNodeInDirection = useCallback(
+  const cycleThroughNodesInDirection = useCallback(
     async (direction: Direction) => {
       if (!params.node) return;
 
@@ -114,16 +115,33 @@ export const useNodeControls = (params: UseNodeControlsParams) => {
         .map((edge) => reactFlow.getNode(edge.target))
         .filter((n): n is Node => !!n);
 
-      const closestNode = NodeHelpers.getClosestNodeEuclidean({
-        node: params.node,
-        nodes: connectedNodes,
-      });
+      if (connectedNodes.length > 1) {
+        const sortedNodesByDistance = NodeHelpers.sortNodesByDistanceEuclidean({
+          node: params.node,
+          nodes: connectedNodes,
+        });
 
-      reactFlow.setNodes((nodes) =>
-        nodes.map((n) => ({ ...n, selected: n.id === closestNode.id })),
-      );
+        const currentIndex = directionalIndexRef.current[direction] ?? -1;
+        const nextIndex = (currentIndex + 1) % sortedNodesByDistance.length;
 
-      await centerViewToNode(closestNode);
+        directionalIndexRef.current[direction] = nextIndex;
+        const nextNode = sortedNodesByDistance[nextIndex];
+
+        reactFlow.setNodes((nodes) =>
+          nodes.map((n) => ({ ...n, selected: n.id === nextNode.id })),
+        );
+
+        await centerViewToNode(nextNode);
+      } else {
+        directionalIndexRef.current[direction] = undefined;
+        const singleNode = connectedNodes[0];
+
+        reactFlow.setNodes((nodes) =>
+          nodes.map((n) => ({ ...n, selected: n.id === singleNode.id })),
+        );
+
+        await centerViewToNode(singleNode);
+      }
     },
     [params.node, reactFlow, centerViewToNode],
   );
@@ -153,10 +171,10 @@ export const useNodeControls = (params: UseNodeControlsParams) => {
       right: () => createNodeInDirection("right"),
     },
     navigate: {
-      toAboveNode: () => navigateToClosestNodeInDirection("top"),
-      toBelowNode: () => navigateToClosestNodeInDirection("bottom"),
-      toLeftNode: () => navigateToClosestNodeInDirection("left"),
-      toRightNode: () => navigateToClosestNodeInDirection("right"),
+      toAboveNode: () => cycleThroughNodesInDirection("top"),
+      toBelowNode: () => cycleThroughNodesInDirection("bottom"),
+      toLeftNode: () => cycleThroughNodesInDirection("left"),
+      toRightNode: () => cycleThroughNodesInDirection("right"),
     },
   };
 };
