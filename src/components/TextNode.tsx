@@ -13,7 +13,7 @@ import {
 export default function TextNode(props: NodeProps<Node>) {
   const inputRef = useRef<HTMLInputElement>(null);
   const node = useReactFlow().getNode(props.id);
-  const nodeKeyboardControls = useNodeControls({ node, inputRef });
+  const nodeControls = useNodeControls({ node, inputRef });
 
   useEffect(() => {
     if (props.selected && inputRef.current) {
@@ -28,35 +28,45 @@ export default function TextNode(props: NodeProps<Node>) {
       switch (event.code) {
         case "Escape":
           event.preventDefault();
-          nodeKeyboardControls.disableInputEditing();
+          nodeControls.disableInputEditing();
           break;
         case "Space":
           event.preventDefault();
-          nodeKeyboardControls.enableInputEditing();
+          nodeControls.enableInputEditing();
           break;
         case "Enter":
           event.preventDefault();
           if (event.shiftKey) {
-            await nodeKeyboardControls.addNodeAbove();
+            await nodeControls.addNodeAbove();
           } else {
-            await nodeKeyboardControls.addNodeBelow();
+            await nodeControls.addNodeBelow();
           }
           break;
         case "Tab":
           event.preventDefault();
           if (event.shiftKey) {
-            await nodeKeyboardControls.addNodeLeft();
+            await nodeControls.addNodeLeft();
           } else {
-            await nodeKeyboardControls.addNodeRight();
+            await nodeControls.addNodeRight();
           }
+          break;
+        case "ArrowUp":
+          event.preventDefault();
+          nodeControls.navigateToAboveNode();
           break;
       }
     },
-    [props, nodeKeyboardControls],
+    [props, nodeControls],
   );
 
   return (
-    <div onKeyDown={onKeyDown} className="bg-background text-foregrounda">
+    <div
+      onClick={() => {
+        console.log(props.id);
+      }}
+      onKeyDown={onKeyDown}
+      className="bg-background text-foregrounda"
+    >
       <Input
         id={"test-input"}
         ref={inputRef}
