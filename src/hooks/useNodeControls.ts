@@ -1,10 +1,10 @@
+import { NodeHelpers } from "@/lib/NodeHelpers";
 import {
   getConnectedEdges,
   useReactFlow,
   type Edge,
   type Node,
 } from "@xyflow/react";
-import { nanoid } from "nanoid";
 import { useCallback } from "react";
 
 type UseNodeControlsParams = {
@@ -12,78 +12,120 @@ type UseNodeControlsParams = {
   inputRef: React.RefObject<HTMLInputElement | null>;
 };
 
+type Direction = "top" | "bottom" | "left" | "right";
+
+type DirectionalNodeCreationConfig = {
+  sourceEdgeSide: string;
+  targetEdgeSide: string;
+  xOffset: number;
+  yOffset: number;
+};
+
+const nodeCreationDirectionConfig: Record<
+  Direction,
+  DirectionalNodeCreationConfig
+> = {
+  top: {
+    sourceEdgeSide: "top",
+    targetEdgeSide: "bottom",
+    xOffset: 0,
+    yOffset: -200,
+  },
+  bottom: {
+    sourceEdgeSide: "bottom",
+    targetEdgeSide: "top",
+    xOffset: 0,
+    yOffset: 200,
+  },
+  left: {
+    sourceEdgeSide: "left",
+    targetEdgeSide: "right",
+    xOffset: -200,
+    yOffset: 0,
+  },
+  right: {
+    sourceEdgeSide: "right",
+    targetEdgeSide: "left",
+    xOffset: 200,
+    yOffset: 0,
+  },
+};
+
 export const useNodeControls = (params: UseNodeControlsParams) => {
-  const defaultOffset = 200;
   const reactFlow = useReactFlow();
 
-  const createLinkedNode = useCallback(
-    ({
-      sourceNode,
-      sourceEdgeSide,
-      targetEdgeSide,
-      xOffset = 0,
-      yOffset = 0,
-    }: {
-      sourceNode: Node;
-      sourceEdgeSide: string;
-      targetEdgeSide: string;
-      xOffset?: number;
-      yOffset?: number;
-    }) => {
-      const newNode: Node = {
-        id: nanoid(),
-        type: "text",
-        position: {
-          x: sourceNode.position.x + xOffset,
-          y: sourceNode.position.y + yOffset,
-        },
-        data: {},
-        selected: true,
-      };
-
-      const newEdge: Edge = {
-        id: `${sourceNode.id}-${newNode.id}`,
-        animated: true,
-        source: sourceNode.id,
-        target: newNode.id,
-        sourceHandle: `${sourceNode.id}-handle-source-${sourceEdgeSide}`,
-        targetHandle: `${newNode.id}-handle-target-${targetEdgeSide}`,
-      };
-
-      return { node: newNode, edge: newEdge };
-    },
-    [],
-  );
-
-  const addNode = useCallback(
-    (newNode: Node) => {
-      reactFlow.setNodes((prevNodes) => [
-        ...prevNodes.map((n) => ({ ...n, selected: false })),
-        newNode,
-      ]);
-    },
-    [reactFlow],
-  );
-
-  const addEdge = useCallback(
-    (newEdge: Edge) => {
-      reactFlow.setEdges((prevEdges) => [...prevEdges, newEdge]);
-    },
-    [reactFlow],
-  );
-
-  const applyChanges = useCallback(
-    async ({ newNode, newEdge }: { newNode: Node; newEdge: Edge }) => {
-      addNode(newNode);
-      addEdge(newEdge);
-
-      await reactFlow.setCenter(newNode.position.x, newNode.position.y, {
+  const centerViewToNode = useCallback(
+    async (node: Node) => {
+      await reactFlow.setCenter(node.position.x, node.position.y, {
         zoom: 1,
         duration: 100,
         interpolate: "smooth",
       });
     },
-    [addNode, addEdge, reactFlow],
+    [reactFlow],
+  );
+
+  const insertNodeWithEdges = useCallback(
+    async ({ newNode, newEdges }: { newNode: Node; newEdges: Edge[] }) => {
+      reactFlow.setNodes((prevNodes) => [
+        ...prevNodes.map((n) => ({ ...n, selected: false })),
+        newNode,
+      ]);
+      reactFlow.setEdges((prevEdges) => [...prevEdges, ...newEdges]);
+      await centerViewToNode(newNode);
+    },
+    [centerViewToNode, reactFlow],
+  );
+
+  const createNodeInDirection = useCallback(
+    async (direction: Direction) => {
+      if (!params.node) return;
+
+      const config = nodeCreationDirectionConfig[direction];
+
+      const link = NodeHelpers.createLinkedNode({
+        sourceNode: params.node,
+        ...config,
+      });
+
+      await insertNodeWithEdges({ newNode: link.node, newEdges: link.edges });
+    },
+    [params.node, insertNodeWithEdges],
+  );
+
+  const navigateToClosestNodeInDirection = useCallback(
+    async (direction: Direction) => {
+      if (!params.node) return;
+
+      const connectedEdges = getConnectedEdges(
+        [params.node],
+        reactFlow.getEdges(),
+      );
+
+      const matchingEdges = connectedEdges.filter(
+        (edge) =>
+          edge.target !== params.node!.id &&
+          edge.sourceHandle?.endsWith(`handle-source-${direction}`),
+      );
+
+      if (matchingEdges.length === 0) return;
+
+      const connectedNodes = matchingEdges
+        .map((edge) => reactFlow.getNode(edge.target))
+        .filter((n): n is Node => !!n);
+
+      const closestNode = NodeHelpers.getClosestNodeEuclidean({
+        node: params.node,
+        nodes: connectedNodes,
+      });
+
+      reactFlow.setNodes((nodes) =>
+        nodes.map((n) => ({ ...n, selected: n.id === closestNode.id })),
+      );
+
+      await centerViewToNode(closestNode);
+    },
+    [params.node, reactFlow, centerViewToNode],
   );
 
   const enableInputEditing = useCallback(() => {
@@ -99,117 +141,22 @@ export const useNodeControls = (params: UseNodeControlsParams) => {
     }
   }, [params.inputRef]);
 
-  const addNodeAbove = useCallback(async () => {
-    if (!params.node) return;
-
-    const link = createLinkedNode({
-      sourceNode: params.node,
-      sourceEdgeSide: "top",
-      targetEdgeSide: "bottom",
-      yOffset: -defaultOffset,
-    });
-
-    await applyChanges({ newNode: link.node, newEdge: link.edge });
-  }, [params.node, createLinkedNode, applyChanges]);
-
-  const addNodeBelow = useCallback(async () => {
-    if (!params.node) return;
-
-    const link = createLinkedNode({
-      sourceNode: params.node,
-      sourceEdgeSide: "bottom",
-      targetEdgeSide: "top",
-      yOffset: defaultOffset,
-    });
-
-    await applyChanges({ newNode: link.node, newEdge: link.edge });
-  }, [params.node, createLinkedNode, applyChanges]);
-
-  const addNodeLeft = useCallback(async () => {
-    if (!params.node) return;
-
-    const link = createLinkedNode({
-      sourceNode: params.node,
-      sourceEdgeSide: "left",
-      targetEdgeSide: "right",
-      xOffset: -defaultOffset,
-    });
-
-    await applyChanges({ newNode: link.node, newEdge: link.edge });
-  }, [params.node, createLinkedNode, applyChanges]);
-
-  const addNodeRight = useCallback(async () => {
-    if (!params.node) return;
-
-    const link = createLinkedNode({
-      sourceNode: params.node,
-      sourceEdgeSide: "right",
-      targetEdgeSide: "left",
-      xOffset: defaultOffset,
-    });
-
-    await applyChanges({ newNode: link.node, newEdge: link.edge });
-  }, [params.node, createLinkedNode, applyChanges]);
-
-  const navigateToAboveNode = useCallback(async () => {
-    if (!params.node) return;
-
-    console.log(params.node);
-
-    const connectedEdges = getConnectedEdges(
-      [params.node],
-      reactFlow.getEdges(),
-    );
-
-    const connectedEdgesAbove = connectedEdges.filter((connectedEdge) =>
-      connectedEdge.sourceHandle!.endsWith("handle-source-top"),
-    );
-
-    if (connectedEdgesAbove.length === 0) return;
-
-    const connectedNodesAbove = connectedEdgesAbove.map(
-      (connectedEdge) => reactFlow.getNode(connectedEdge.target)!,
-    );
-
-    const closestNodeAbove = connectedNodesAbove.reduce(
-      (closestNode, currentNode) => {
-        const dxCurrent = currentNode.position.x - params.node!.position.x;
-        const dyCurrent = currentNode.position.y - params.node!.position.y;
-        const currentDistance = Math.sqrt(dxCurrent ** 2 + dyCurrent ** 2);
-
-        const dxClosest = closestNode.position.x - params.node!.position.x;
-        const dyClosest = closestNode.position.y - params.node!.position.y;
-        const closestDistance = Math.sqrt(dxClosest ** 2 + dyClosest ** 2);
-
-        return currentDistance < closestDistance ? currentNode : closestNode;
-      },
-      connectedNodesAbove[0],
-    );
-
-    reactFlow.setNodes((nodes) =>
-      nodes.map((n) => ({ ...n, selected: n.id === closestNodeAbove.id })),
-    );
-
-    await reactFlow.setCenter(
-      closestNodeAbove.position.x,
-      closestNodeAbove.position.y,
-      {
-        zoom: 1,
-        duration: 100,
-        interpolate: "smooth",
-      },
-    );
-
-    console.log(`closest node: ${JSON.stringify(closestNodeAbove)}`);
-  }, [params.node, reactFlow]);
-
   return {
-    addNodeAbove,
-    addNodeBelow,
-    addNodeLeft,
-    addNodeRight,
-    disableInputEditing,
-    enableInputEditing,
-    navigateToAboveNode,
+    input: {
+      enableEditing: enableInputEditing,
+      disableEditing: disableInputEditing,
+    },
+    addNode: {
+      above: () => createNodeInDirection("top"),
+      below: () => createNodeInDirection("bottom"),
+      left: () => createNodeInDirection("left"),
+      right: () => createNodeInDirection("right"),
+    },
+    navigate: {
+      toAboveNode: () => navigateToClosestNodeInDirection("top"),
+      toBelowNode: () => navigateToClosestNodeInDirection("bottom"),
+      toLeftNode: () => navigateToClosestNodeInDirection("left"),
+      toRightNode: () => navigateToClosestNodeInDirection("right"),
+    },
   };
 };

@@ -28,31 +28,43 @@ export default function TextNode(props: NodeProps<Node>) {
       switch (event.code) {
         case "Escape":
           event.preventDefault();
-          nodeControls.disableInputEditing();
+          nodeControls.input.disableEditing();
           break;
         case "Space":
           event.preventDefault();
-          nodeControls.enableInputEditing();
+          nodeControls.input.enableEditing();
           break;
         case "Enter":
           event.preventDefault();
           if (event.shiftKey) {
-            await nodeControls.addNodeAbove();
+            await nodeControls.addNode.above();
           } else {
-            await nodeControls.addNodeBelow();
+            await nodeControls.addNode.below();
           }
           break;
         case "Tab":
           event.preventDefault();
           if (event.shiftKey) {
-            await nodeControls.addNodeLeft();
+            await nodeControls.addNode.left();
           } else {
-            await nodeControls.addNodeRight();
+            await nodeControls.addNode.right();
           }
           break;
         case "ArrowUp":
           event.preventDefault();
-          nodeControls.navigateToAboveNode();
+          nodeControls.navigate.toAboveNode();
+          break;
+        case "ArrowDown":
+          event.preventDefault();
+          nodeControls.navigate.toBelowNode();
+          break;
+        case "ArrowLeft":
+          event.preventDefault();
+          nodeControls.navigate.toLeftNode();
+          break;
+        case "ArrowRight":
+          event.preventDefault();
+          nodeControls.navigate.toRightNode();
           break;
       }
     },
@@ -62,7 +74,7 @@ export default function TextNode(props: NodeProps<Node>) {
   return (
     <div
       onClick={() => {
-        console.log(props.id);
+        console.log(props);
       }}
       onKeyDown={onKeyDown}
       className="bg-background text-foregrounda"
