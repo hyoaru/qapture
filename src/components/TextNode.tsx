@@ -1,55 +1,47 @@
 import TextNodeHandles from "@/components/TextNodeHandles";
 import { Input } from "@/components/ui/input";
+import { useNodeKeyboardControls } from "@/hooks/useNodeKeyboardControls";
 import { cn } from "@/lib/utils";
-import { type NodeProps } from "@xyflow/react";
+import { useReactFlow, type Node, type NodeProps } from "@xyflow/react";
 import { useCallback, useRef, type KeyboardEventHandler } from "react";
 
-type TextNodeProps = NodeProps & {
-  data: {
-    onEnterDown: () => void;
-    onShiftEnterDown: () => void;
-    onTabDown: () => void;
-    onShiftTabDown: () => void;
-    onSpaceDown: (inputRef: React.RefObject<HTMLInputElement | null>) => void;
-    onEscapeDown: (inputRef: React.RefObject<HTMLInputElement | null>) => void;
-  };
-};
-
-export default function TextNode(props: TextNodeProps) {
+export default function TextNode(props: NodeProps<Node>) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const node = useReactFlow().getNode(props.id)!;
+  const nodeKeyboardControls = useNodeKeyboardControls({ node, inputRef });
 
   const onKeyDown: KeyboardEventHandler<HTMLDivElement> = useCallback(
-    (event) => {
+    async (event) => {
       if (!props.selected) return;
 
       switch (event.code) {
         case "Escape":
           event.preventDefault();
-          props.data.onEscapeDown(inputRef);
+          nodeKeyboardControls.onEscapeDown();
           break;
         case "Space":
           event.preventDefault();
-          props.data.onSpaceDown(inputRef);
+          nodeKeyboardControls.onSpaceDown();
           break;
         case "Enter":
           event.preventDefault();
           if (event.shiftKey) {
-            props.data.onShiftEnterDown();
+            await nodeKeyboardControls.onShiftEnterDown();
           } else {
-            props.data.onEnterDown();
+            await nodeKeyboardControls.onEnterDown();
           }
           break;
         case "Tab":
           event.preventDefault();
           if (event.shiftKey) {
-            props.data.onShiftTabDown();
+            await nodeKeyboardControls.onShiftTabDown();
           } else {
-            props.data.onTabDown();
+            await nodeKeyboardControls.onTabDown();
           }
           break;
       }
     },
-    [props],
+    [props, nodeKeyboardControls],
   );
 
   return (
