@@ -9,7 +9,10 @@ export class DagreNodeLayoutStrategy implements INodeLayoutStrategy {
     dagreGraph.setGraph({ rankdir: "LR" });
 
     nodes.forEach((node) => {
-      dagreGraph.setNode(node.id, { width: 180, height: 80 });
+      dagreGraph.setNode(node.id, {
+        width: node.measured?.width ?? 180,
+        height: node.measured?.height ?? 80,
+      });
     });
 
     edges.forEach((edge) => {

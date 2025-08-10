@@ -3,8 +3,6 @@ import { nanoid } from "nanoid";
 
 type CreateLinkedNodeParams = {
   sourceNode: Node;
-  sourceEdgeSide: string;
-  targetEdgeSide: string;
   xOffset?: number;
   yOffset?: number;
 };
@@ -22,8 +20,6 @@ type SortClosestNodeEuclideanParams = {
 export class NodeHelpers {
   static createLinkedNode({
     sourceNode,
-    sourceEdgeSide,
-    targetEdgeSide,
     xOffset = 0,
     yOffset = 0,
   }: CreateLinkedNodeParams) {
@@ -38,26 +34,16 @@ export class NodeHelpers {
       selected: true,
     };
 
-    const newEdges: Edge[] = [
-      {
-        id: `${sourceNode.id}-${newNode.id}-${nanoid()}`,
-        animated: true,
-        source: sourceNode.id,
-        target: newNode.id,
-        sourceHandle: `${sourceNode.id}-handle-source-${sourceEdgeSide}`,
-        targetHandle: `${newNode.id}-handle-target-${targetEdgeSide}`,
-      },
-      {
-        id: `${sourceNode.id}-${newNode.id}-${nanoid()}`,
-        animated: true,
-        source: newNode.id,
-        target: sourceNode.id,
-        targetHandle: `${sourceNode.id}-handle-target-${sourceEdgeSide}`,
-        sourceHandle: `${newNode.id}-handle-source-${targetEdgeSide}`,
-      },
-    ];
+    const newEdge: Edge = {
+      id: `${sourceNode.id}-${newNode.id}-${nanoid()}`,
+      animated: true,
+      source: sourceNode.id,
+      target: newNode.id,
+      sourceHandle: `${sourceNode.id}-handle-source-right`,
+      targetHandle: `${newNode.id}-handle-target-left`,
+    };
 
-    return { node: newNode, edges: newEdges };
+    return { node: newNode, edge: newEdge };
   }
 
   static getClosestNodeEuclidean({
