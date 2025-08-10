@@ -1,4 +1,5 @@
 import { NodeHelpers } from "@/lib/NodeHelpers";
+import { NodeLayoutEngine } from "@/lib/NodeLayoutEngine";
 import {
   getConnectedEdges,
   useReactFlow,
@@ -31,12 +32,25 @@ export const useNodeControls = (params: UseNodeControlsParams) => {
 
   const insertNodeWithEdges = useCallback(
     async ({ newNode, newEdges }: { newNode: Node; newEdges: Edge[] }) => {
-      reactFlow.setNodes((prevNodes) => [
-        ...prevNodes.map((n) => ({ ...n, selected: false })),
+      const updatedNodes = [
+        ...reactFlow.getNodes().map((n) => ({ ...n, selected: false })),
         newNode,
-      ]);
-      reactFlow.setEdges((prevEdges) => [...prevEdges, ...newEdges]);
-      await centerViewToNode(newNode);
+      ];
+      const updatedEdges = [...reactFlow.getEdges(), ...newEdges];
+
+      const layoutResult = new NodeLayoutEngine().run({
+        nodes: updatedNodes,
+        edges: updatedEdges,
+      });
+
+      reactFlow.setNodes(layoutResult.nodes);
+      reactFlow.setEdges(layoutResult.edges);
+
+      const updatedNewNode = layoutResult.nodes.find(
+        (n) => n.id === newNode.id,
+      );
+
+      await centerViewToNode(updatedNewNode!);
     },
     [centerViewToNode, reactFlow],
   );
