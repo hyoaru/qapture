@@ -32,6 +32,10 @@ export default function TextNode(props: NodeProps<Node>) {
           event.preventDefault();
           nodeControls.input.disableEditing();
           break;
+        case "Backspace":
+          event.preventDefault();
+          nodeControls.deleteNode();
+          break;
         case "Space":
           if (isEditing) return;
           setIsEditing(true);
@@ -40,7 +44,7 @@ export default function TextNode(props: NodeProps<Node>) {
           break;
         case "Tab":
           event.preventDefault();
-          await nodeControls.addNode.right();
+          await nodeControls.addNode();
           break;
         case "ArrowLeft":
           if (isEditing) return;

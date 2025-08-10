@@ -1,20 +1,16 @@
 import TextNode from "@/components/TextNode";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  addEdge,
   Background,
   BackgroundVariant,
   Controls,
-  MiniMap,
   ReactFlow,
   useEdgesState,
   useNodesState,
   type Node,
-  type OnConnect,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { nanoid } from "nanoid";
-import { useCallback } from "react";
 
 export const Route = createFileRoute("/")({ component: RouteComponent });
 
@@ -30,14 +26,7 @@ const initialNodes: Node[] = [
 
 function RouteComponent() {
   const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-
-  const onConnect: OnConnect = useCallback(
-    (params) => {
-      setEdges((edgesSnapshot) => addEdge(params, edgesSnapshot));
-    },
-    [setEdges],
-  );
+  const [edges, , onEdgesChange] = useEdgesState([]);
 
   return (
     <>
@@ -45,14 +34,14 @@ function RouteComponent() {
         <ReactFlow
           nodes={nodes}
           edges={edges}
+          nodesDraggable={false}
+          nodesConnectable={false}
           nodeTypes={{ text: TextNode }}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
           fitView
         >
           <Controls />
-          <MiniMap />
           <Background variant={BackgroundVariant.Dots} gap={10} size={0.8} />
         </ReactFlow>
       </div>

@@ -28,6 +28,37 @@ export const useNodeControls = (params: UseNodeControlsParams) => {
     [reactFlow],
   );
 
+  const deleteNode = useCallback(async () => {
+    if (!params.node) return;
+
+    const edges = reactFlow.getEdges();
+    const edge = edges.find((e) => e.target === params.node!.id);
+
+    let leftNode = null;
+    if (edge) {
+      leftNode = reactFlow.getNode(edge.source);
+    }
+
+    reactFlow.setNodes((nodes) =>
+      nodes
+        .filter((n) => n.id !== params.node!.id)
+        .map((n) => ({
+          ...n,
+          selected: leftNode ? n.id === leftNode.id : false,
+        })),
+    );
+
+    reactFlow.setEdges((edges) =>
+      edges.filter(
+        (e) => e.source !== params.node!.id && e.target !== params.node!.id,
+      ),
+    );
+
+    if (leftNode) {
+      await centerViewToNode(leftNode);
+    }
+  }, [params.node, centerViewToNode, reactFlow]);
+
   const insertNodeWithEdge = useCallback(
     async ({ newNode, newEdge: newEdge }: { newNode: Node; newEdge: Edge }) => {
       const updatedNodes = [
@@ -147,9 +178,8 @@ export const useNodeControls = (params: UseNodeControlsParams) => {
       enableEditing: enableInputEditing,
       disableEditing: disableInputEditing,
     },
-    addNode: {
-      right: createNodeRight,
-    },
+    deleteNode: deleteNode,
+    addNode: createNodeRight,
     navigate: {
       toLeftNode: navigateToLeftNode,
       toRightNode: cycleThroughRightNodes,
