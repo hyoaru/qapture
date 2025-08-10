@@ -1,6 +1,7 @@
 import TextNodeHandles from "@/components/TextNodeHandles";
 import { Input } from "@/components/ui/input";
-import { useNodeControls } from "@/hooks/useNodeControls";
+import { useGraphControls } from "@/hooks/useGraphControls";
+import { useNodeControls } from "@/hooks/useNodeControlsLegacy";
 import { cn } from "@/lib/utils";
 import { useReactFlow, type Node, type NodeProps } from "@xyflow/react";
 import {
@@ -15,6 +16,7 @@ export default function TextNode(props: NodeProps<Node>) {
   const inputRef = useRef<HTMLInputElement>(null);
   const node = useReactFlow().getNode(props.id);
   const nodeControls = useNodeControls({ node, inputRef });
+  const graphControls = useGraphControls({ node, inputRef });
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
@@ -44,7 +46,7 @@ export default function TextNode(props: NodeProps<Node>) {
           break;
         case "Tab":
           event.preventDefault();
-          await nodeControls.addNode();
+          await graphControls.mutation.addLink();
           break;
         case "ArrowLeft":
           if (isEditing) return;

@@ -1,3 +1,4 @@
+import { FlowNode } from "@/lib/FlowNode";
 import { NodeHelpers } from "@/lib/NodeHelpers";
 import { NodeLayoutEngine } from "@/lib/NodeLayoutEngine";
 import {
@@ -86,14 +87,16 @@ export const useNodeControls = (params: UseNodeControlsParams) => {
 
   const createNodeRight = useCallback(async () => {
     if (!params.node) return;
+    const node = new FlowNode(params.node);
+    const linkedNode = node.createLink();
 
-    const link = NodeHelpers.createLinkedNode({
-      sourceNode: params.node,
-      xOffset: params.node.measured!.width! + 200,
-      yOffset: 0,
-    });
-
-    await insertNodeWithEdge({ newNode: link.node, newEdge: link.edge });
+    // const link = NodeHelpers.createLinkedNode({
+    //   sourceNode: params.node,
+    //   xOffset: params.node.measured!.width! + 200,
+    //   yOffset: 0,
+    // });
+    //
+    // await insertNodeWithEdge({ newNode: link.node, newEdge: link.edge });
   }, [params.node, insertNodeWithEdge]);
 
   const navigateToLeftNode = useCallback(async () => {
