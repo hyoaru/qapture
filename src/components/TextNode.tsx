@@ -34,29 +34,9 @@ export default function TextNode(props: NodeProps<Node>) {
           event.preventDefault();
           nodeControls.input.enableEditing();
           break;
-        case "Enter":
-          event.preventDefault();
-          if (event.shiftKey) {
-            await nodeControls.addNode.above();
-          } else {
-            await nodeControls.addNode.below();
-          }
-          break;
         case "Tab":
           event.preventDefault();
-          if (event.shiftKey) {
-            await nodeControls.addNode.left();
-          } else {
-            await nodeControls.addNode.right();
-          }
-          break;
-        case "ArrowUp":
-          event.preventDefault();
-          nodeControls.navigate.toAboveNode();
-          break;
-        case "ArrowDown":
-          event.preventDefault();
-          nodeControls.navigate.toBelowNode();
+          await nodeControls.addNode.right();
           break;
         case "ArrowLeft":
           event.preventDefault();
