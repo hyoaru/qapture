@@ -8,6 +8,7 @@ export class FlowNode implements IFlowNode {
   constructor(node: Node) {
     this.node = node;
   }
+
   toNode(): Node {
     throw new Error("Method not implemented.");
   }
@@ -19,7 +20,7 @@ export class FlowNode implements IFlowNode {
   }
 
   createLink(): ReturnType<IFlowNode["createLink"]> {
-    const linkedNode = GraphFactory.createNode({ selected: true });
+    const linkedNode = GraphFactory.createNode();
     const linkedEdge = GraphFactory.createEdge({
       source: this.node,
       target: linkedNode,

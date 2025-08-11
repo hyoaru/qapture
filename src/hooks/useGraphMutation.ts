@@ -1,5 +1,10 @@
 import { FlowNode } from "@/lib/FlowNode";
-import { useReactFlow, type Edge, type Node } from "@xyflow/react";
+import {
+  getConnectedEdges,
+  useReactFlow,
+  type Edge,
+  type Node,
+} from "@xyflow/react";
 import { useCallback } from "react";
 
 type CreateLinkParams = {
@@ -7,8 +12,8 @@ type CreateLinkParams = {
 };
 
 type CreateLinkResult = {
-  newNode: Node;
-  newEdge: Edge;
+  addedNode: Node;
+  addedEdge: Edge;
   updatedNodes: Node[];
   updatedEdges: Edge[];
 };
@@ -16,6 +21,14 @@ type CreateLinkResult = {
 type CommitParams = {
   nodes: Node[];
   edges: Edge[];
+};
+
+type DeleteNodeResult = {
+  parentNode: Node | null;
+  removedNode: Node;
+  removedEdges: Edge[];
+  updatedNodes: Node[];
+  updatedEdges: Edge[];
 };
 
 export const useGraphMutation = () => {
@@ -29,7 +42,38 @@ export const useGraphMutation = () => {
     [reactFlow],
   );
 
-  const createLink = useCallback(
+  const removeNodeAndLinks = useCallback(
+    (node: Node): DeleteNodeResult => {
+      const existingEdges = reactFlow.getEdges();
+      const connectedEdges = getConnectedEdges([node], existingEdges);
+      const connectedNodeIds = connectedEdges.map((e: Edge) => e.target);
+      const connectedEdgesIds = connectedEdges.map((e: Edge) => e.id);
+
+      const parentEdge = connectedEdges.find((e) => e.target == node.id);
+      const parentNode = parentEdge
+        ? (reactFlow.getNode(parentEdge.source) ?? null)
+        : null;
+
+      const updatedNodes = reactFlow
+        .getNodes()
+        .filter((n: Node) => !connectedNodeIds.includes(n.id));
+
+      const updatedEdges = reactFlow
+        .getEdges()
+        .filter((e: Edge) => !connectedEdgesIds.includes(e.id));
+
+      return {
+        parentNode: parentNode,
+        removedNode: node,
+        removedEdges: connectedEdges,
+        updatedNodes: updatedNodes,
+        updatedEdges: updatedEdges,
+      };
+    },
+    [reactFlow],
+  );
+
+  const createLinkedNode = useCallback(
     (params: CreateLinkParams): CreateLinkResult => {
       const node = new FlowNode(params.sourceNode);
       const link = node.createLink();
@@ -42,8 +86,8 @@ export const useGraphMutation = () => {
       const updatedEdges = reactFlow.getEdges().concat(link.edge);
 
       return {
-        newNode: link.node,
-        newEdge: link.edge,
+        addedNode: link.node,
+        addedEdge: link.edge,
         updatedNodes: updatedNodes,
         updatedEdges: updatedEdges,
       };
@@ -51,5 +95,11 @@ export const useGraphMutation = () => {
     [reactFlow],
   );
 
-  return { createLink, commit };
+  return {
+    node: {
+      createLink: createLinkedNode,
+      remove: removeNodeAndLinks,
+    },
+    commit,
+  };
 };

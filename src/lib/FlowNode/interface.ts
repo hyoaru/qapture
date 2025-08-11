@@ -10,4 +10,5 @@ export interface IFlowNode {
   createLink(): CreateLinkResult;
   getClosest(params: { nodes: Node[] }): Node;
   sortByDistance(params: { nodes: Node[] }): Node[];
+  sortByDistance(params: { nodes: Node[] }): Node[];
 }

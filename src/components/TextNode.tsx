@@ -36,7 +36,7 @@ export default function TextNode(props: NodeProps<Node>) {
           break;
         case "Backspace":
           event.preventDefault();
-          nodeControls.deleteNode();
+          await graphControls.node.delete();
           break;
         case "Space":
           if (isEditing) return;
@@ -46,7 +46,7 @@ export default function TextNode(props: NodeProps<Node>) {
           break;
         case "Tab":
           event.preventDefault();
-          await graphControls.mutation.addLink();
+          await graphControls.node.add();
           break;
         case "ArrowLeft":
           if (isEditing) return;
@@ -60,7 +60,7 @@ export default function TextNode(props: NodeProps<Node>) {
           break;
       }
     },
-    [props, nodeControls, isEditing],
+    [props, nodeControls, isEditing, graphControls],
   );
 
   return (

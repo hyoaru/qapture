@@ -15,7 +15,17 @@ export const useGraphViewport = () => {
     [reactFlow],
   );
 
+  const selectNode = useCallback(
+    (node: Node) => {
+      reactFlow.setNodes((prevNodes) =>
+        prevNodes.map((n) => ({ ...n, selected: n.id == node.id })),
+      );
+    },
+    [reactFlow],
+  );
+
   return {
     centerToNode,
+    selectNode,
   };
 };
