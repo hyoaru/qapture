@@ -1,8 +1,11 @@
 import { CirclePlus, ExternalLink, Menu } from "lucide-react";
 import { Button } from "./ui/button";
 import { ThemeToggle } from "./ThemeToggle";
+import { useGraphControls } from "@/hooks/useGraphControls";
 
-export const CanvasControlBar = () => {
+export const ControlBar = () => {
+  const graphControls = useGraphControls();
+
   return (
     <>
       <div className="flex w-full items-center justify-between">
@@ -14,8 +17,12 @@ export const CanvasControlBar = () => {
           <Menu />
         </Button>
         <div className="pointer-events-auto flex items-center gap-1 px-2">
-          <Button variant={"secondary"}>
-            <CirclePlus /> Add root node
+          <Button
+            onClick={graphControls.node.addRoot}
+            className="cursor-pointer"
+            variant={"secondary"}
+          >
+            <CirclePlus /> Add node
           </Button>
         </div>
 

@@ -1,4 +1,5 @@
 import { FlowNode } from "@/lib/FlowNode";
+import { GraphFactory } from "@/lib/GraphFactory";
 import {
   getConnectedEdges,
   useReactFlow,
@@ -94,10 +95,28 @@ export const useGraphMutation = () => {
     [reactFlow],
   );
 
+  const createRootNode = useCallback(() => {
+    const node = GraphFactory.createNode();
+
+    const updatedNodes = reactFlow
+      .getNodes()
+      .map((n: Node) => ({ ...n, selected: false }))
+      .concat(node as Node & { selected: boolean });
+
+    const updatedEdges = reactFlow.getEdges();
+
+    return {
+      addedNode: node,
+      updatedNodes: updatedNodes,
+      updatedEdges: updatedEdges,
+    };
+  }, [reactFlow]);
+
   return {
     node: {
       createLink: createLinkedNode,
       remove: removeNodeAndLinks,
+      createRoot: createRootNode,
     },
     commit,
   };

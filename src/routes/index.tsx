@@ -1,4 +1,4 @@
-import { CanvasControlBar } from "@/components/CanvasControlBar";
+import { ControlBar } from "@/components/ControlBar";
 import TextNode from "@/components/TextNode";
 import { useGraphLayout } from "@/hooks/useGraphLayout";
 import { createFileRoute } from "@tanstack/react-router";
@@ -69,9 +69,6 @@ function RouteComponent() {
   return (
     <>
       <div className="relative h-[100vh] w-[100vw]">
-        <div className="pointer-events-none absolute z-10 h-full w-full p-4">
-          <CanvasControlBar />
-        </div>
         <ReactFlow
           onInit={(instance: ReactFlowInstance) =>
             (reactFlow.current = instance)
@@ -87,6 +84,9 @@ function RouteComponent() {
           proOptions={{ hideAttribution: true }}
           fitView
         >
+          <div className="pointer-events-none absolute z-10 h-full w-full p-4">
+            <ControlBar />
+          </div>
           <Background variant={BackgroundVariant.Dots} gap={10} size={0.8} />
         </ReactFlow>
       </div>
