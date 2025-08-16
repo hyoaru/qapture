@@ -35,6 +35,7 @@ export default function TextNode(props: NodeProps<Node>) {
           nodeControls.input.disableEditing();
           break;
         case "Backspace":
+          if (isEditing) return;
           event.preventDefault();
           await graphControls.node.delete();
           break;
