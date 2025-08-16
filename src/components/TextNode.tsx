@@ -65,13 +65,7 @@ export default function TextNode(props: NodeProps<Node>) {
   );
 
   return (
-    <div
-      onClick={() => {
-        console.log(props);
-      }}
-      onKeyDown={onKeyDown}
-      className="bg-background text-foregrounda"
-    >
+    <div onClick={() => console.log(props)} onKeyDown={onKeyDown}>
       <Input
         id={"test-input"}
         ref={inputRef}
@@ -82,7 +76,9 @@ export default function TextNode(props: NodeProps<Node>) {
             setIsEditing(false);
           }
         }}
-        className={cn("field-sizing-content min-w-20 text-center ")}
+        className={cn(
+          "bg-secondary dark:bg-foreground/90 dark:text-background field-sizing-content min-w-20 text-center",
+        )}
       />
 
       <TextNodeHandles nodeId={props.id} />

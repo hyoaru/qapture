@@ -1,3 +1,4 @@
+import { CanvasControlBar } from "@/components/CanvasControlBar";
 import TextNode from "@/components/TextNode";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -30,7 +31,10 @@ function RouteComponent() {
 
   return (
     <>
-      <div style={{ width: "100vw", height: "100vh" }}>
+      <div className="relative h-[100vh] w-[100vw]">
+        <div className="pointer-events-none absolute z-10 h-full w-full p-4">
+          <CanvasControlBar />
+        </div>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -42,7 +46,6 @@ function RouteComponent() {
           proOptions={{ hideAttribution: true }}
           fitView
         >
-          <Controls />
           <Background variant={BackgroundVariant.Dots} gap={10} size={0.8} />
         </ReactFlow>
       </div>
