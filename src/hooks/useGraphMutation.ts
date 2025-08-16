@@ -46,7 +46,6 @@ export const useGraphMutation = () => {
     (node: Node): DeleteNodeResult => {
       const existingEdges = reactFlow.getEdges();
       const connectedEdges = getConnectedEdges([node], existingEdges);
-      const connectedNodeIds = connectedEdges.map((e: Edge) => e.target);
       const connectedEdgesIds = connectedEdges.map((e: Edge) => e.id);
 
       const parentEdge = connectedEdges.find((e) => e.target == node.id);
@@ -56,7 +55,7 @@ export const useGraphMutation = () => {
 
       const updatedNodes = reactFlow
         .getNodes()
-        .filter((n: Node) => !connectedNodeIds.includes(n.id));
+        .filter((n: Node) => n.id !== node.id);
 
       const updatedEdges = reactFlow
         .getEdges()
