@@ -39,6 +39,7 @@ function RouteComponent() {
           nodeTypes={{ text: TextNode }}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
+          proOptions={{ hideAttribution: true }}
           fitView
         >
           <Controls />
