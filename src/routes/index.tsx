@@ -1,6 +1,7 @@
 import { ControlBar } from "@/components/ControlBar";
 import TextNode from "@/components/TextNode";
 import { useGraphLayout } from "@/hooks/useGraphLayout";
+import { useTheme } from "@/providers/theme-provider";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   addEdge,
@@ -34,6 +35,7 @@ function RouteComponent() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([] as Edge[]);
   const reactFlow = useRef<ReactFlowInstance | null>(null);
+  const themeContext = useTheme();
   const graphLayout = useGraphLayout();
 
   const onConnect = useCallback(
@@ -87,7 +89,10 @@ function RouteComponent() {
           <div className="pointer-events-none absolute z-10 h-full w-full p-4">
             <ControlBar />
           </div>
-          <Background variant={BackgroundVariant.Dots} gap={10} size={0.8} />
+
+          {themeContext.theme === "light" && (
+            <Background variant={BackgroundVariant.Dots} gap={10} size={0.8} />
+          )}
         </ReactFlow>
       </div>
     </>
